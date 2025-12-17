@@ -1,21 +1,34 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 1. إعدادات الصورة المصغرة والوصف (Thumbnail) -->
+    <!-- الوسوم الأساسية للمعاينة (Thumbnail) - لا تحذفها أو تغير ترتيبها -->
     <title>كورة الأغواط لايف | Kooora Laghouat Live</title>
-    <meta name="description" content="تغطية مباشرة وحصرية لنتائج مباريات أندية الأغواط والجنوب الجزائري. تابع النتائج لحظة بلحظة.">
+    <meta name="description" content="تغطية مباشرة وحصرية لنتائج مباريات أندية الأغواط والجنوب الجزائري لحظة بلحظة.">
     
-    <!-- فيسبوك وواتساب -->
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://koooralaghouat.web.app/"> <!-- استبدل هذا برابط موقعك الفعلي -->
     <meta property="og:title" content="كورة الأغواط لايف - Kooora Laghouat Live">
     <meta property="og:description" content="نتائج مباريات الأغواط والجنوب الجزائري لحظة بلحظة.">
     <meta property="og:image" content="https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg">
+    <meta property="og:image:secure_url" content="https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:type" content="website">
-    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="كورة الأغواط لايف - Kooora Laghouat Live">
+    <meta name="twitter:description" content="نتائج مباريات الأغواط والجنوب الجزائري لحظة بلحظة.">
+    <meta name="twitter:image" content="https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg">
+
+    <!-- رابط للصورة مخصص للواتساب القديم -->
+    <link rel="image_src" href="https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg">
+
     <meta name="theme-color" content="#059669">
     
     <!-- Styles -->
@@ -56,7 +69,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // 2. البيانات
+        // [بقية البيانات والأكواد كما هي بدون تغيير...]
         const LEAGUES_DATA = {
              "الجهوي الأول (فوج أ)": [
                 { name: "ش ب عين اميناس", logo: "https://lrfouargla.com/uploads/images/logos/1(1).png" },
@@ -130,7 +143,6 @@
 
         const { useState, useEffect } = React;
 
-        // دالة تنسيق التاريخ المعدلة لتشمل السنة كاملة
         const formatMatchDate = (dateStr) => {
             if (!dateStr) return "";
             try {
@@ -139,14 +151,13 @@
                 const dayName = days[date.getDay()];
                 const day = date.getDate().toString().padStart(2, '0');
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const year = date.getFullYear(); // السنة كاملة
+                const year = date.getFullYear();
                 return `${dayName} ${day}/${month}/${year}`;
             } catch (e) { return dateStr; }
         };
 
         const isMatchLive = (match) => match.status.includes('الشوط') || match.status === 'نهاية الشوط الأول';
 
-        // --- Match Card ---
         const MatchCard = ({ match }) => {
             const isLive = isMatchLive(match);
             const [currentTime, setCurrentTime] = useState("00:00");
@@ -210,23 +221,19 @@
             );
         };
 
-        // --- Public Match List ---
         const MatchListPublic = ({ matches }) => {
             const [activeTab, setActiveTab] = useState('week');
             const liveCount = matches.filter(m => isMatchLive(m)).length;
-
             const filtered = matches.filter(m => {
                 if (activeTab === 'week') return true;
                 if (activeTab === 'live') return isMatchLive(m);
                 if (activeTab === 'finished') return m.status === 'نهاية المباراة';
                 return true;
             });
-
             const sorted = [...filtered].sort((a, b) => {
                  if (a.matchDate !== b.matchDate) return (a.matchDate || '') > (b.matchDate || '') ? 1 : -1;
                  return (a.matchTime || '') > (b.matchTime || '') ? 1 : -1;
             });
-
             const grouped = sorted.reduce((acc, m) => {
                 (acc[m.league] = acc[m.league] || []).push(m);
                 return acc;
@@ -242,10 +249,7 @@
                         </button>
                         <button onClick={() => setActiveTab('finished')} className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${activeTab === 'finished' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}>منتهية</button>
                     </div>
-
-                    {Object.keys(grouped).length === 0 ? (
-                        <div className="text-center py-20 text-slate-400 font-bold">لا توجد مباريات حالياً</div>
-                    ) : (
+                    {Object.keys(grouped).length === 0 ? <div className="text-center py-20 text-slate-400 font-bold">لا توجد مباريات حالياً</div> : 
                         Object.entries(grouped).map(([league, items]) => (
                             <div key={league} className="mb-8">
                                 <div className="flex items-center gap-2 mb-3 px-2">
@@ -255,12 +259,11 @@
                                 {items.map(m => <MatchCard key={m.id} match={m} />)}
                             </div>
                         ))
-                    )}
+                    }
                 </div>
             );
         };
 
-        // --- Admin Panel ---
         const AdminPanel = ({ matches, user, setView }) => {
             const [league, setLeague] = useState('');
             const [home, setHome] = useState('');
@@ -268,7 +271,6 @@
             const [round, setRound] = useState('1');
             const [matchDate, setMatchDate] = useState('');
             const [matchTime, setMatchTime] = useState('');
-            
             const addMatch = async () => {
                 if(!league || !home || !away) return alert('الرجاء اختيار الفرق والبطولة');
                 const hLogo = (LEAGUES_DATA[league]||[]).find(t=>t.name===home)?.logo || '';
@@ -280,7 +282,6 @@
                 });
                 alert('تم نشر المباراة ✅');
             };
-
             return (
                 <div className="bg-slate-50 min-h-screen">
                     <div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm">
@@ -290,7 +291,6 @@
                             <button onClick={()=>auth.signOut()} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">🚪 خروج</button>
                         </div>
                     </div>
-
                     <div className="p-4 pb-20">
                         <div className="bg-white p-4 rounded-xl shadow-sm mb-6 border border-emerald-100">
                             <h3 className="font-bold text-emerald-800 mb-3 text-sm">إضافة مباراة جديدة</h3>
@@ -304,33 +304,21 @@
                                     <input type="time" className="flex-1 p-2 bg-slate-50 rounded-lg text-sm border" onChange={e=>setMatchTime(e.target.value)} />
                                 </div>
                                 <div className="flex gap-2">
-                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setHome(e.target.value)}>
-                                        <option>المستضيف</option>
-                                        {(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}
-                                    </select>
-                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setAway(e.target.value)}>
-                                        <option>الضيف</option>
-                                        {(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}
-                                    </select>
+                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setHome(e.target.value)}><option>المستضيف</option>{(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}</select>
+                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setAway(e.target.value)}><option>الضيف</option>{(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}</select>
                                 </div>
                                 <button onClick={addMatch} className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold">نشر المباراة</button>
                             </div>
                         </div>
-                        
                         <div className="space-y-4">
                             {matches.map(m => (
                                 <div key={m.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                                    <div className="flex justify-between items-center text-xs mb-3">
-                                        <span className="font-bold truncate w-2/3">{m.home} vs {m.away}</span>
-                                        <button onClick={()=>db.collection("matches").doc(m.id).delete()} className="text-red-500 font-bold">حذف</button>
-                                    </div>
+                                    <div className="flex justify-between items-center text-xs mb-3"><span className="font-bold truncate w-2/3">{m.home} vs {m.away}</span><button onClick={()=>db.collection("matches").doc(m.id).delete()} className="text-red-500 font-bold">حذف</button></div>
                                     <div className="flex gap-2 mb-3">
                                         <input type="number" className="w-full p-2 bg-slate-100 rounded text-center font-bold" value={m.scoreH} onChange={e=>db.collection("matches").doc(m.id).update({scoreH:Number(e.target.value)})}/>
                                         <input type="number" className="w-full p-2 bg-slate-100 rounded text-center font-bold" value={m.scoreA} onChange={e=>db.collection("matches").doc(m.id).update({scoreA:Number(e.target.value)})}/>
                                     </div>
-                                    <select className="w-full p-2 bg-slate-50 text-xs rounded border mb-2 font-bold" value={m.status} onChange={e=>db.collection("matches").doc(m.id).update({status:e.target.value})}>
-                                        <option>لم تبدأ</option><option>الشوط الأول</option><option>نهاية الشوط الأول</option><option>الشوط الثاني</option><option>نهاية المباراة</option>
-                                    </select>
+                                    <select className="w-full p-2 bg-slate-50 text-xs rounded border mb-2 font-bold" value={m.status} onChange={e=>db.collection("matches").doc(m.id).update({status:e.target.value})}><option>لم تبدأ</option><option>الشوط الأول</option><option>نهاية الشوط الأول</option><option>الشوط الثاني</option><option>نهاية المباراة</option></select>
                                     <div className="flex items-center gap-2">
                                         <button onClick={()=>db.collection("matches").doc(m.id).update({isRunning:!m.isRunning, lastStartTime: m.isRunning ? null : Date.now()})} className={`p-2 rounded flex-1 text-white text-xs font-bold ${m.isRunning?'bg-orange-500':'bg-emerald-500'}`}>{m.isRunning ? 'إيقاف الوقت' : 'تشغيل الوقت'}</button>
                                         <input type="number" className="w-20 p-2 bg-white border rounded text-center text-xs font-bold" value={m.time} onChange={(e)=>db.collection("matches").doc(m.id).update({time:Number(e.target.value)})}/>
@@ -349,12 +337,10 @@
             const [matches, setMatches] = useState([]);
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
-
             useEffect(() => {
                 auth.onAuthStateChanged(u => { setUser(u); if(u) setView('admin'); });
                 return db.collection("matches").onSnapshot(s => setMatches(s.docs.map(d => ({id:d.id, ...d.data()}))));
             }, []);
-
             if(view==='login' && !user) return (
                 <div className="h-screen flex items-center justify-center p-6 bg-white">
                     <form onSubmit={e=>{e.preventDefault(); auth.signInWithEmailAndPassword(email,password)}} className="w-full max-w-sm space-y-4">
@@ -366,7 +352,6 @@
                     </form>
                 </div>
             );
-
             return (
                 <div>
                     {view==='admin' && user ? <AdminPanel matches={matches} user={user} setView={setView}/> : 
@@ -382,15 +367,12 @@
                                 </button>
                             </div>
                         </div>
-                        <div className="px-4 mt-6">
-                            <MatchListPublic matches={matches}/>
-                        </div>
+                        <div className="px-4 mt-6"><MatchListPublic matches={matches}/></div>
                     </div>
                     }
                 </div>
             );
         };
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>

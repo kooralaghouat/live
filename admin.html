@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز القيادة | إدارة كورة الأغواط</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #020617; color: #f1f5f9; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { background: #0f172a; border-left: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-card { background: #1e293b; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.03); transition: all 0.3s ease; }
+        @keyframes pulse-live { 0%, 100% { border-color: rgba(239, 68, 68, 0.2); } 50% { border-color: #ef4444; } }
+        .live-active { animation: pulse-live 2s infinite; border-width: 1px !important; }
+        input, select, textarea { background: #020617 !important; border: 1px solid #334155 !important; color: #ffffff !important; border-radius: 12px !important; outline: none; padding: 12px; }
+        .active-tab { background: linear-gradient(to left, rgba(16, 185, 129, 0.1), transparent); border-right: 4px solid #10b981; color: #10b981; }
+    </style>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const LEAGUES_DATA = {
+            "قسم ما بين الرابطات": [
+                { name: "إتحاد النزلة", logo: "https://lirf.org.dz/uploads/images/logos/3.png" },
+                { name: "نادي تقرت", logo: "https://lirf.org.dz/uploads/images/logos/received_257439396802495.jpeg" },
+                { name: "أ متليلي الشعانبة", logo: "https://lirf.org.dz/uploads/images/logos/5.png" },
+                { name: "اتحاد الخنق", logo: "https://lirf.org.dz/uploads/images/logos/IRBKheneg.png" },
+                { name: "إتحاد الزاوية", logo: "https://lirf.org.dz/uploads/images/logos/6.png" },
+                { name: "اتحاد آفلو", logo: "https://lirf.org.dz/uploads/images/logos/407-1656244680.png" },
+                { name: "إتحاد همايسة", logo: "https://lirf.org.dz/uploads/images/logos/102.png" },
+                { name: "مشعل حاسي مسعود", logo: "https://lirf.org.dz/uploads/images/logos/13.png" },
+                { name: "شباب جامعة", logo: "https://lirf.org.dz/uploads/images/logos/39(1).png" },
+                { name: "رائد قلتةس سعد", logo: "https://lirf.org.dz/uploads/images/logos/Gueltet%20Sidi%20Saad.png" },
+                { name: "اولمبي الواد", logo: "https://lirf.org.dz/uploads/images/logos/Olympique%20El-Oued.png" },
+                { name: "أولمبيك المقرن", logo: "https://lirf.org.dz/uploads/images/logos/8.png" },
+                { name: "نجوم اليزي", logo: "https://lirf.org.dz/uploads/images/logos/16.png" },
+                { name: "إتحاد حاسي الرمل", logo: "https://lirf.org.dz/uploads/images/logos/12.png" },
+                { name: "اتحاد سوف", logo: "https://lirf.org.dz/uploads/images/logos/412-1715352850.png" },
+                { name: "اتحاد ورقلة", logo: "https://lirf.org.dz/uploads/images/logos/414-1662939264.png" }
+            ],
+            "الجهوي الأول (فوج أ)": [
+                { name: "ش ب عين اميناس", logo: "https://lrfouargla.com/uploads/images/logos/1(1).png" },
+                { name: "ن.ر.تقنتورين", logo: "https://lrfouargla.com/uploads/images/logos/203-1601155957.png" },
+                { name: "اتحاد الغرابة", logo: "https://lrfouargla.com/uploads/images/logos/sssx.png" },
+                { name: "م .شباب .المخادمة", logo: "https://lrfouargla.com/uploads/images/logos/sz.png" },
+                { name: "إتحاد بريان", logo: "https://lrfouargla.com/uploads/images/logos/47.png" },
+                { name: "ترجي تقديدين", logo: "https://lrfouargla.com/uploads/images/logos/133.png" },
+                { name: "و.ر.ب.الدبيلة", logo: "https://lrfouargla.com/uploads/images/logos/qqqqqq.png" },
+                { name: "نادي بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/23.png" },
+                { name: "المنظر الجميل", logo: "https://lrfouargla.com/uploads/images/logos/CSBV%20(1).png" },
+                { name: "م.ك.أمل النزلة", logo: "https://lrfouargla.com/uploads/images/logos/sss%20%E2%80%AB%E2%80%AC.png" },
+                { name: "إتحاد الرباح", logo: "https://lrfouargla.com/uploads/images/logos/73.png" },
+                { name: "شباب سيدي بوعزيز", logo: "https://lrfouargla.com/uploads/images/logos/13.png" },
+                { name: "شباب قصر الحيران", logo: "https://lrfouargla.com/uploads/images/logos/54.png" },
+                { name: "إتحاد حاسي الدلاعة", logo: "https://lrfouargla.com/uploads/images/logos/53.png" }
+            ],
+            "الجهوي الأول (فوج ب)": [
+                { name: "شباب قصر ورقلة", logo: "https://lrfouargla.com/uploads/images/logos/15826488_199664807171500_3091424271281007906_n.gif" },
+                { name: "وفاق المغير", logo: "https://lrfouargla.com/uploads/images/logos/111.png" },
+                { name: "اتحاد .ر. ب.الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg" },
+                { name: "وفاق عين ماضي", logo: "https://lrfouargla.com/uploads/images/logos/125.png" },
+                { name: "أمل سوف", logo: "https://lrfouargla.com/uploads/images/logos/88.png" },
+                { name: "شباب نهقار", logo: "https://lrfouargla.com/uploads/images/logos/102.png" },
+                { name: "هلال غرداية", logo: "https://lrfouargla.com/uploads/images/logos/75.png" },
+                { name: "التضامن السوفي", logo: "https://lrfouargla.com/uploads/images/logos/72.png" },
+                { name: "إ. الرباضي المنيعي", logo: "https://lrfouargla.com/uploads/images/logos/WhatsApp%20Image%202025-10-25%20%C3%A0%2022.02.03_23b4051f.jpg" },
+                { name: "ش.أ.تمنراست", logo: "https://lrfouargla.com/uploads/images/logos/100.png" },
+                { name: "إتحاد عين البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/40.png" },
+                { name: "وفاق مقر", logo: "https://lrfouargla.com/uploads/images/logos/38.png" },
+                { name: "إ.الحمادين", logo: "https://lrfouargla.com/uploads/images/logos/168-1531611858.png" },
+                { name: "نجم بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/NRNBO-02.png" }
+            ],
+            "الجهوي الثاني (فوج ج)": [
+                { name: "م .ش .الثنية غرداية", logo: "https://lrfouargla.com/uploads/images/logos/449-1634476753.png" },
+                { name: "مولودية البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/46.png" },
+                { name: "رائد المنيعة", logo: "https://lrfouargla.com/uploads/images/logos/7.png" },
+                { name: "بن ناصر بن شهرة", logo: "https://lrfouargla.com/uploads/images/logos/49(1).png" },
+                { name: "إ.ضاية بن ضحوة", logo: "https://lrfouargla.com/uploads/images/logos/57(1).png" },
+                { name: "مستقبل لماضي", logo: "https://lrfouargla.com/uploads/images/logos/56.png" },
+                { name: "رائد حاسي القارة", logo: "https://lrfouargla.com/uploads/images/logos/134.png" },
+                { name: "عين سيدي علي", logo: "https://lrfouargla.com/uploads/images/logos/1528-1663416912.png" },
+                { name: "نادي الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/50.png" },
+                { name: "إتحاد تاجموت", logo: "https://lrfouargla.com/uploads/images/logos/nirbt.png" },
+                { name: "اتحاد.بريدة", logo: "https://lrfouargla.com/uploads/images/logos/2174-1665949908.png" },
+                { name: "ترجي مرماد", logo: "https://lrfouargla.com/uploads/images/logos/51.png" },
+                { name: "وداد زلفانة", logo: "https://lrfouargla.com/uploads/images/logos/t%C3%A9l%C3%A9chargement%20(1).jpg" },
+                { name: "الاسماعيلي القرارة", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20231119-WA0010.jpg" },
+                { name: "أمل سيدي بوزيد", logo: "https://lrfouargla.com/uploads/images/logos/49.png" },
+                { name: "اتحاد شباب تاغيت", logo: "https://lrfouargla.com/uploads/images/logos/1855-1664293222.png" }
+            ],
+            "بطولات الولائي": [
+                { name: "نادي حاسي الرمل", logo: "https://cdn-icons-png.flaticon.com/512/53/53283.png" },
+                { name: "أمل الأغواط", logo: "https://cdn-icons-png.flaticon.com/512/53/53283.png" }
+            ]
+        };
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAXLSZ5OqPEOnP0DUx3w75fU2xxiVkrWcE",
+          authDomain: "koooralaghouat.firebaseapp.com",
+          projectId: "koooralaghouat",
+          storageBucket: "koooralaghouat.firebasestorage.app",
+          messagingSenderId: "84750708348",
+          appId: "1:84750708348:web:179ec7acf8fc2f357e23f9"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const { useState, useEffect } = React;
+
+        const TimeTicker = ({ match }) => {
+            const [display, setDisplay] = useState("00:00");
+            useEffect(() => {
+                const tick = () => {
+                    let total = (match.time || 0) * 60;
+                    if (match.isRunning && match.lastStartTime) total += Math.floor((Date.now() - match.lastStartTime) / 1000);
+                    setDisplay(`${Math.floor(total/60).toString().padStart(2,'0')}:${(total%60).toString().padStart(2,'0')}`);
+                };
+                tick();
+                const i = match.isRunning ? setInterval(tick, 1000) : null;
+                return () => clearInterval(i);
+            }, [match.time, match.isRunning, match.lastStartTime]);
+            return <span className={`mono text-5xl font-black ${match.isRunning ? 'text-emerald-500' : 'text-orange-500'}`}>{display}</span>;
+        };
+
+        const AdminApp = () => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [activeTab, setActiveTab] = useState('manage');
+            const [matches, setMatches] = useState([]);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+
+            const [fLeague, setFLeague] = useState('');
+            const [fHome, setFHome] = useState('');
+            const [fAway, setFAway] = useState('');
+            const [fDate, setFDate] = useState('');
+            const [fTime, setFTime] = useState('');
+            const [fRound, setFRound] = useState('1');
+
+            useEffect(() => {
+                const u1 = auth.onAuthStateChanged(u => { setUser(u); setLoading(false); });
+                const u2 = db.collection("matches").onSnapshot(s => setMatches(s.docs.map(d => ({id:d.id, ...d.data()}))));
+                return () => { u1(); u2(); };
+            }, []);
+
+            const isLive = (m) => m.isRunning || ['الشوط الأول', 'الشوط الثاني', 'استراحة'].includes(m.status);
+
+            const handleStatus = (id, status) => {
+                let up = { status };
+                if (status === 'استراحة') { up.isRunning = false; up.time = 45; up.lastStartTime = null; }
+                else if (status === 'نهاية المباراة') { up.isRunning = false; up.lastStartTime = null; }
+                db.collection("matches").doc(id).update(up);
+            };
+
+            if (loading) return <div className="h-screen flex items-center justify-center text-white">جاري التحميل...</div>;
+
+            if (!user) return (
+                <div className="h-screen flex items-center justify-center p-6 bg-[#020617]">
+                    <form onSubmit={(e)=>{e.preventDefault(); auth.signInWithEmailAndPassword(email, password).catch(err=>alert(err.message))}} className="bg-[#0f172a] w-full max-w-sm p-10 rounded-[30px] border border-white/5 shadow-2xl space-y-6">
+                        <h2 className="text-3xl font-black text-center text-emerald-500 italic">LOGIN</h2>
+                        <input className="w-full" type="email" placeholder="الإيميل" onChange={e=>setEmail(e.target.value)} required />
+                        <input className="w-full" type="password" placeholder="كلمة المرور" onChange={e=>setPassword(e.target.value)} required />
+                        <button type="submit" className="w-full bg-emerald-600 py-4 rounded-2xl font-black">دخول</button>
+                    </form>
+                </div>
+            );
+
+            return (
+                <div className="flex flex-col md:flex-row min-h-screen">
+                    <aside className="sidebar w-full md:w-72 p-8 md:sticky md:top-0 md:h-screen flex flex-col gap-10">
+                        <h1 className="text-2xl font-black text-emerald-500">إدارة المنصة</h1>
+                        <nav className="flex flex-col gap-3">
+                            <button onClick={()=>setActiveTab('manage')} className={`p-4 rounded-2xl text-right font-bold transition flex justify-between items-center ${activeTab==='manage'?'active-tab':'text-slate-400'}`}>⚙️ إدارة اللقاءات <span>{matches.filter(isLive).length}</span></button>
+                            <button onClick={()=>setActiveTab('add')} className={`p-4 rounded-2xl text-right font-bold transition ${activeTab==='add'?'active-tab':'text-slate-400'}`}>➕ إضافة مباراة</button>
+                        </nav>
+                        <button onClick={()=>auth.signOut()} className="mt-auto p-4 bg-red-500/10 text-red-500 rounded-2xl font-bold">خروج</button>
+                    </aside>
+                    <main className="flex-1 p-6 md:p-12 overflow-y-auto">
+                        {activeTab === 'manage' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {matches.map(m => (
+                                    <div key={m.id} className={`glass-card p-6 flex flex-col gap-6 ${isLive(m)?'live-active':''}`}>
+                                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            <span>{m.league} | جولة {m.round}</span>
+                                            <button onClick={()=>db.collection("matches").doc(m.id).delete()} className="text-red-500">حذف</button>
+                                        </div>
+                                        <div className="bg-[#020617] p-6 rounded-[22px] border border-white/5 space-y-6 text-center">
+                                            <TimeTicker match={m} />
+                                            <div className="grid grid-cols-4 gap-2">
+                                                <button onClick={()=>db.collection("matches").doc(m.id).update({time: m.time + 1})} className="time-btn p-2 rounded-xl text-xs font-bold">+1د</button>
+                                                <button onClick={()=>db.collection("matches").doc(m.id).update({time: m.time + 5})} className="time-btn p-2 rounded-xl text-xs font-bold">+5د</button>
+                                                <button onClick={()=>handleStatus(m.id, 'استراحة')} className="time-btn p-2 rounded-xl text-xs font-bold">استراحة</button>
+                                                <button onClick={()=>db.collection("matches").doc(m.id).update({time: 0, isRunning: false, lastStartTime: null})} className="time-btn p-2 rounded-xl text-xs font-bold text-red-500">تصفير</button>
+                                                <button onClick={()=>{
+                                                    if (!m.isRunning) db.collection("matches").doc(m.id).update({ isRunning: true, lastStartTime: Date.now() });
+                                                    else db.collection("matches").doc(m.id).update({ isRunning: false, time: (m.time || 0) + ((Date.now() - m.lastStartTime) / 60000), lastStartTime: null });
+                                                }} className={`col-span-4 py-4 rounded-2xl font-black ${m.isRunning?'bg-orange-500':'bg-emerald-600'}`}>{m.isRunning?'إيقاف':'بدء البث'}</button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-slate-900/50 p-4 rounded-2xl text-center border border-white/5">
+                                                <img src={m.homeLogo} className="w-10 h-10 mb-2 mx-auto object-contain" />
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <button onClick={()=>db.collection("matches").doc(m.id).update({scoreH: m.scoreH + 1})} className="w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-lg">+</button>
+                                                    <span className="text-xl font-black mono">{m.scoreH}</span>
+                                                    <button onClick={()=>db.collection("matches").doc(m.id).update({scoreH: Math.max(0, m.scoreH - 1)})} className="w-8 h-8 bg-red-500/20 text-red-500 rounded-lg">-</button>
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-900/50 p-4 rounded-2xl text-center border border-white/5">
+                                                <img src={m.awayLogo} className="w-10 h-10 mb-2 mx-auto object-contain" />
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <button onClick={()=>db.collection("matches").doc(m.id).update({scoreA: m.scoreA + 1})} className="w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-lg">+</button>
+                                                    <span className="text-2xl font-black mono">{m.scoreA}</span>
+                                                    <button onClick={()=>db.collection("matches").doc(m.id).update({scoreA: Math.max(0, m.scoreA - 1)})} className="w-8 h-8 bg-red-500/20 text-red-500 rounded-lg">-</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <select className="w-full p-4 font-bold" value={m.status} onChange={e=>handleStatus(m.id, e.target.value)}>
+                                            <option>لم تبدأ</option><option>الشوط الأول</option><option>استراحة</option><option>الشوط الثاني</option><option>نهاية المباراة</option>
+                                        </select>
+                                        <textarea className="w-full h-16 p-3 text-xs" placeholder="أدخل أحداث اللقاء هنا..." value={m.events} onChange={e=>db.collection("matches").doc(m.id).update({events:e.target.value})}></textarea>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {activeTab === 'add' && (
+                            <div className="max-w-2xl mx-auto glass-card p-10 space-y-8">
+                                <h2 className="text-2xl font-black text-emerald-500">نشر مباراة جديدة</h2>
+                                <select className="w-full p-4" onChange={e=>setFLeague(e.target.value)} value={fLeague}>
+                                    <option value="">-- اختر الدوري --</option>
+                                    {Object.keys(LEAGUES_DATA).map(k=><option key={k} value={k}>{k}</option>)}
+                                </select>
+                                <div className="grid grid-cols-2 gap-8 text-center border-y border-white/5 py-8">
+                                    <div className="space-y-4">
+                                        <div className="w-16 h-16 bg-[#020617] rounded-xl mx-auto flex items-center justify-center p-2">
+                                            <img src={LEAGUES_DATA[fLeague]?.find(t=>t.name===fHome)?.logo || ''} className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                        <select className="w-full p-3 text-xs" onChange={e=>setFHome(e.target.value)} value={fHome}><option value="">المستضيف</option>{(LEAGUES_DATA[fLeague]||[]).map(t=><option key={t.name}>{t.name}</option>)}</select>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="w-16 h-16 bg-[#020617] rounded-2xl mx-auto flex items-center justify-center p-2">
+                                            <img src={LEAGUES_DATA[fLeague]?.find(t=>t.name===fAway)?.logo || ''} className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                        <select className="w-full p-3 text-xs" onChange={e=>setFAway(e.target.value)} value={fAway}><option value="">الضيف</option>{(LEAGUES_DATA[fLeague]||[]).map(t=><option key={t.name}>{t.name}</option>)}</select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="date" className="p-4" onChange={e=>setFDate(e.target.value)}/><input type="time" className="p-4" onChange={e=>setFTime(e.target.value)}/><input type="number" placeholder="رقم الجولة" className="col-span-2 p-4" onChange={e=>setFRound(e.target.value)}/>
+                                </div>
+                                <button onClick={async()=>{
+                                    const hL = LEAGUES_DATA[fLeague].find(t=>t.name===fHome).logo;
+                                    const aL = LEAGUES_DATA[fLeague].find(t=>t.name===fAway).logo;
+                                    await db.collection("matches").add({ league:fLeague, home:fHome, away:fAway, homeLogo:hL, awayLogo:aL, scoreH:0, scoreA:0, status:'لم تبدأ', isRunning:false, time:0, round:fRound, matchDate:fDate, matchTime:fTime, events:'' });
+                                    alert("تم النشر ✅"); setActiveTab('manage');
+                                }} className="w-full bg-emerald-600 py-5 rounded-3xl font-black text-xl">نشر اللقاء 🚀</button>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<AdminApp />);
+    </script>
+</body>
+</html>
